@@ -4,18 +4,6 @@ volumes:
   seq:
 
 services:
-  userdb:
-    image: postgres:latest
-    container_name: userdb
-    environment:
-      POSTGRES_DB: UserServiceDb
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
-    networks:
-      - talenthub-net
-
   resumedb:
     image: postgres:latest
     container_name: resumedb
@@ -40,18 +28,6 @@ services:
     networks:
       - talenthub-net
 
-  handshakedb:
-    image: postgres:latest
-    container_name: handshakedb
-    environment:
-      POSTGRES_DB: handshakedb
-      POSTGRES_USER: handshake
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5435:5432"
-    networks:
-      - talenthub-net
-
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
@@ -65,27 +41,12 @@ services:
     networks:
       - talenthub-net
 
-  seq:
-    image: datalust/seq:latest
-    container_name: seq
-    volumes:
-     - seq:/data
-    environment:
-      ACCEPT_EULA: "Y"
-      SEQ_FIRSTRUN_AUTHENTICATION: "None"
-    ports:
-      - 5341:5341
-      - 8082:80
-    networks:
-      - talenthub-net
-
   userservice:
     image: localhost/talenthub.userservice.api:dev
     container_name: userservice
     ports:
-      - "8080:8080"
+      - "8086:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: "Development"
       ApplicationConfiguration__ConnectionString: "Host=userdb;Database=UserServiceDb;Username=user;Password=password"
       RabbitMqConfiguration__Host: "rabbitmq"
       RabbitMqConfiguration__QueueName: "lotusbyte.talenthub.notification.req"
@@ -95,41 +56,69 @@ services:
     networks:
       - talenthub-net
 
-#   resumeservice:
-#     image: your-docker-repo/talenthub-resumeservice:latest
-#     container_name: resumeservice
-#     environment:
-#       ConnectionStrings__DefaultConnection: "Host=resumedb;Database=resumedb;Username=resume;Password=password"
-#       RabbitMQ__Host: "rabbitmq"
-#     depends_on:
-#       - resumedb
-#       - rabbitmq
-#     networks:
-#       - talenthub-net
+  userdb:
+    image: postgres:latest
+    container_name: userdb
+    environment:
+      POSTGRES_DB: UserServiceDb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5436:5432"
+    networks:
+      - talenthub-net
+  
+  #   resumeservice:
+  #     image: your-docker-repo/talenthub-resumeservice:latest
+  #     container_name: resumeservice
+  #     environment:
+  #       ConnectionStrings__DefaultConnection: "Host=resumedb;Database=resumedb;Username=resume;Password=password"
+  #       RabbitMQ__Host: "rabbitmq"
+  #     depends_on:
+  #       - resumedb
+  #       - rabbitmq
+  #     networks:
+  #       - talenthub-net
+  
+  #   jobservice:
+  #     image: your-docker-repo/talenthub-jobservice:latest
+  #     container_name: jobservice
+  #     environment:
+  #       ConnectionStrings__DefaultConnection: "Host=jobdb;Database=jobdb;Username=job;Password=password"
+  #       RabbitMQ__Host: "rabbitmq"
+  #     depends_on:
+  #       - jobdb
+  #       - rabbitmq
+  #     networks:
+  #       - talenthub-net
 
-#   jobservice:
-#     image: your-docker-repo/talenthub-jobservice:latest
-#     container_name: jobservice
-#     environment:
-#       ConnectionStrings__DefaultConnection: "Host=jobdb;Database=jobdb;Username=job;Password=password"
-#       RabbitMQ__Host: "rabbitmq"
-#     depends_on:
-#       - jobdb
-#       - rabbitmq
-#     networks:
-#       - talenthub-net
-
-#   handshakeservice:
-#     image: your-docker-repo/talenthub-handshakeservice:latest
-#     container_name: handshakeservice
-#     environment:
-#       ConnectionStrings__DefaultConnection: "Host=handshakedb;Database=handshakedb;Username=handshake;Password=password"
-#       RabbitMQ__Host: "rabbitmq"
-#     depends_on:
-#       - handshakedb
-#       - rabbitmq
-#     networks:
-#       - talenthub-net
+  handshakeservice:
+    image: localhost/talenthub.handshakeservice.api:dev
+    container_name: handshakeservice
+    ports:
+      - "8087:8080"
+    environment:
+      ApplicationConfiguration__ConnectionString: "Host=handshakedb;Database=HandshakeServiceDb;Username=user;Password=password"
+      RabbitMqConfiguration__Host: "rabbitmq"
+      RabbitMqConfiguration__QueueName: "lotusbyte.talenthub.notification.req"
+      UserServiceClientConfiguration__Endpoint: "http://userservice:8080/api/"
+    depends_on:
+      - handshakedb
+      - rabbitmq
+    networks:
+      - talenthub-net
+  
+  handshakedb:
+    image: postgres:latest
+    container_name: handshakedb
+    environment:
+      POSTGRES_DB: HandshakeServiceDb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5437:5432"
+    networks:
+      - talenthub-net
 
   notificationservice:
     image: localhost/talenthub.notificationservice.host:dev
@@ -142,6 +131,20 @@ services:
     depends_on:
       - rabbitmq
       - seq
+    networks:
+      - talenthub-net
+
+  seq:
+    image: datalust/seq:latest
+    container_name: seq
+    volumes:
+      - seq:/data
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_AUTHENTICATION: "None"
+    ports:
+      - 5341:5341
+      - 8082:80
     networks:
       - talenthub-net
 
