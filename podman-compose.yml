@@ -4,48 +4,9 @@ volumes:
   seq:
 
 services:
-  resumedb:
-    image: postgres:latest
-    container_name: resumedb
-    environment:
-      POSTGRES_DB: resumedb
-      POSTGRES_USER: resume
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5433:5432"
-    networks:
-      - talenthub-net
-
-  jobdb:
-    image: postgres:latest
-    container_name: jobdb
-    environment:
-      POSTGRES_DB: jobdb
-      POSTGRES_USER: job
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5434:5432"
-    networks:
-      - talenthub-net
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-      RABBITMQ_DEFAULT_VHOST: /
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    networks:
-      - talenthub-net
-
   userservice:
     image: localhost/talenthub.userservice.api:dev
     container_name: userservice
-    ports:
-      - "8086:8080"
     environment:
       ApplicationConfiguration__ConnectionString: "Host=userdb;Database=UserServiceDb;Username=user;Password=password"
       RabbitMqConfiguration__Host: "rabbitmq"
@@ -53,6 +14,8 @@ services:
     depends_on:
       - userdb
       - rabbitmq
+    ports:
+      - "8086:8080"
     networks:
       - talenthub-net
 
@@ -67,36 +30,61 @@ services:
       - "5436:5432"
     networks:
       - talenthub-net
-  
-  #   resumeservice:
-  #     image: your-docker-repo/talenthub-resumeservice:latest
-  #     container_name: resumeservice
-  #     environment:
-  #       ConnectionStrings__DefaultConnection: "Host=resumedb;Database=resumedb;Username=resume;Password=password"
-  #       RabbitMQ__Host: "rabbitmq"
-  #     depends_on:
-  #       - resumedb
-  #       - rabbitmq
-  #     networks:
-  #       - talenthub-net
-  
-  #   jobservice:
-  #     image: your-docker-repo/talenthub-jobservice:latest
-  #     container_name: jobservice
-  #     environment:
-  #       ConnectionStrings__DefaultConnection: "Host=jobdb;Database=jobdb;Username=job;Password=password"
-  #       RabbitMQ__Host: "rabbitmq"
-  #     depends_on:
-  #       - jobdb
-  #       - rabbitmq
-  #     networks:
-  #       - talenthub-net
+
+  resumeservice:
+    image: localhost/talenthub.resumeservice.api:dev
+    container_name: resumeservice
+    environment:
+      ConnectionStrings__ResumeDb: "Host=resumedb;Database=resume;Username=user;Password=password;Search Path=resume,public"
+      RabbitMQ__Host: "rabbitmq"
+    depends_on:
+      - resumedb
+      - rabbitmq
+    ports:
+      - "8087:8080"
+    networks:
+      - talenthub-net
+
+  resumedb:
+    image: postgres:latest
+    container_name: resumedb
+    environment:
+      POSTGRES_DB: resumedb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    networks:
+      - talenthub-net
+
+  jobservice:
+    image: localhost/talenthub.jobservice.api:dev
+    container_name: jobservice
+    environment:
+      ConnectionStrings__JobDb: "Host=jobdb;Database=job;Username=user;Password=password;Search Path=job,public"
+    depends_on:
+      - jobdb
+      - rabbitmq
+    ports:
+      - "8088:8080"
+    networks:
+      - talenthub-net
+
+  jobdb:
+    image: postgres:latest
+    container_name: jobdb
+    environment:
+      POSTGRES_DB: job
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5434:5432"
+    networks:
+      - talenthub-net
 
   handshakeservice:
     image: localhost/talenthub.handshakeservice.api:dev
     container_name: handshakeservice
-    ports:
-      - "8087:8080"
     environment:
       ApplicationConfiguration__ConnectionString: "Host=handshakedb;Database=HandshakeServiceDb;Username=user;Password=password"
       RabbitMqConfiguration__Host: "rabbitmq"
@@ -105,6 +93,8 @@ services:
     depends_on:
       - handshakedb
       - rabbitmq
+    ports:
+      - "8089:8080"
     networks:
       - talenthub-net
   
@@ -145,6 +135,19 @@ services:
     ports:
       - 5341:5341
       - 8082:80
+    networks:
+      - talenthub-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672"
+      - "15672:15672"
     networks:
       - talenthub-net
 
